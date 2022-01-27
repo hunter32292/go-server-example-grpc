@@ -1,0 +1,44 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: grpcapi-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: grpcapi
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 50051
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpcapi
+  labels:
+    app: grpcapi
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grpcapi
+  template:
+    metadata:
+      labels:
+        app: grpcapi
+    spec:
+      containers:
+      - name: grpcapi
+        image: registry.digitalocean.com/stupkaj/grpc-api:v2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 50051
+        readinessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:5000"]
+          initialDelaySeconds: 5
+        livenessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:5000"]
+          initialDelaySeconds: 10
